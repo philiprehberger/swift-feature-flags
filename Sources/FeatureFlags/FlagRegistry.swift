@@ -46,10 +46,11 @@ public final class FlagRegistry: @unchecked Sendable {
 
     /// Refresh all remote providers
     public func refresh() async throws {
-        let currentProviders: [any FlagProvider]
-        lock.lock()
-        currentProviders = providers
-        lock.unlock()
+        let currentProviders: [any FlagProvider] = {
+            lock.lock()
+            defer { lock.unlock() }
+            return providers
+        }()
 
         for provider in currentProviders {
             try await provider.refresh()
