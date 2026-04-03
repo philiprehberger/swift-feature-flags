@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 /// A flag provider that fetches flags from a JSON URL
 ///
@@ -28,8 +31,9 @@ public final class RemoteProvider: @unchecked Sendable, FlagProvider {
     public func refresh() async throws {
         let (data, _) = try await session.data(from: url)
         let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
-        lock.lock()
-        cache = json
-        lock.unlock()
+        let newCache = json
+        lock.withLock {
+            cache = newCache
+        }
     }
 }
